@@ -17,20 +17,21 @@
     body { font-family: 'DM Sans', sans-serif; background: #f5f7fb; }
     .bubble-input:checked + label { background:#2563eb; color:#fff; border-color:#2563eb; box-shadow:0 4px 12px #2563eb35; }
     .bubble-input:focus-visible + label { outline:3px solid #93c5fd; outline-offset:2px; }
-    .glass { background:rgba(255,255,255,.92); backdrop-filter:blur(14px); }
     .soft-shadow { box-shadow:0 12px 36px rgba(15,23,42,.06); }
-    .fade-in { animation:fade-in .28s ease-out; }
-    @keyframes fade-in { from { opacity:0; transform:translateY(6px) } to { opacity:1; transform:translateY(0) } }
+    .slate-grid { background-image: linear-gradient(rgba(148,163,184,.08) 1px, transparent 1px), linear-gradient(90deg, rgba(148,163,184,.08) 1px, transparent 1px); background-size: 18px 18px; }
     @media (prefers-reduced-motion: reduce) { *,*::before,*::after { animation-duration:.01ms!important; transition-duration:.01ms!important; scroll-behavior:auto!important; } }
   </style>
 </head>
 <body class="min-h-screen text-slate-800">
   <header class="sticky top-0 z-40 border-b border-white/10 bg-slate-950 text-white shadow-lg shadow-slate-900/10">
     <div class="mx-auto flex max-w-7xl flex-col gap-3 px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-6">
-      <a href="#" class="flex items-center gap-3" aria-label="OptiAnaliz ana sayfa">
+      <div class="flex items-center gap-3">
         <span class="grid h-10 w-10 place-items-center rounded-xl bg-blue-500 text-lg shadow-lg shadow-blue-500/25"><i class="fa-solid fa-file-signature"></i></span>
-        <span><span class="block text-base font-extrabold tracking-tight">OptiAnaliz</span><span class="block text-[11px] text-slate-400">Sınav değerlendirme platformu</span></span>
-      </a>
+        <div>
+          <span class="block text-base font-extrabold tracking-tight">OptiAnaliz</span>
+          <span class="block text-[11px] text-slate-400">Sınav değerlendirme platformu</span>
+        </div>
+      </div>
       <nav class="flex w-full rounded-xl bg-white/5 p-1 sm:w-auto" aria-label="Ana gezinme">
         <button id="tabStudentBtn" type="button" onclick="switchTab('student')" class="flex-1 rounded-lg bg-blue-600 px-4 py-2 text-xs font-bold text-white transition sm:flex-none"><i class="fa-solid fa-pen-to-square mr-2"></i>Öğrenci</button>
         <button id="tabAdminBtn" type="button" onclick="switchTab('admin')" class="flex-1 rounded-lg px-4 py-2 text-xs font-bold text-slate-300 transition hover:text-white sm:flex-none"><i class="fa-solid fa-chart-pie mr-2"></i>Analiz</button>
@@ -39,10 +40,7 @@
   </header>
 
   <main class="mx-auto w-full max-w-7xl space-y-6 px-4 py-6 sm:px-6 sm:py-8">
-    <div id="toast" role="status" aria-live="polite" class="hidden items-center justify-between gap-4 rounded-2xl border px-4 py-3 text-sm font-semibold">
-      <div class="flex items-center gap-3"><i id="toastIcon" class="fa-solid fa-circle-info"></i><span id="toastMessage"></span></div>
-      <button type="button" onclick="hideToast()" aria-label="Bildirimi kapat" class="opacity-70 hover:opacity-100"><i class="fa-solid fa-xmark"></i></button>
-    </div>
+    <div id="toast" role="status" aria-live="polite" class="hidden items-center justify-between gap-4 rounded-2xl border px-4 py-3 text-sm font-semibold"></div>
 
     <section id="studentSection" class="space-y-6">
       <div class="relative overflow-hidden rounded-3xl bg-gradient-to-br from-blue-700 via-blue-700 to-indigo-900 px-6 py-8 text-white soft-shadow sm:px-9 sm:py-10">
@@ -109,7 +107,12 @@
     <section id="adminSection" class="hidden space-y-6">
       <div class="flex flex-col gap-4 rounded-3xl border border-slate-200/80 bg-white p-5 soft-shadow sm:flex-row sm:items-center sm:justify-between sm:p-6">
         <div><p class="text-xs font-bold uppercase tracking-widest text-blue-600">Genel bakış</p><h2 class="mt-1 text-xl font-extrabold tracking-tight sm:text-2xl">Sınav analizi</h2><p class="mt-1 text-sm text-slate-500">Katılımı, soru başarısını ve sınıf sonuçlarını incele.</p></div>
-        <div class="flex flex-wrap gap-2"><button type="button" onclick="openKeyModal()" class="rounded-xl border border-slate-200 px-3.5 py-2.5 text-xs font-bold text-slate-700 transition hover:bg-slate-50"><i class="fa-solid fa-key mr-1.5 text-blue-600"></i>Cevap anahtarı</button><button type="button" onclick="resetAllData()" class="rounded-xl border border-rose-200 bg-rose-50 px-3.5 py-2.5 text-xs font-bold text-rose-600 transition hover:bg-rose-100"><i class="fa-solid fa-trash-can mr-1.5"></i>Verileri sıfırla</button></div>
+        <div class="flex flex-wrap gap-2">
+          <button type="button" onclick="seedSampleData()" class="rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-xs font-bold text-slate-700 transition hover:bg-slate-100"><i class="fa-solid fa-database mr-1.5 text-violet-600"></i>Örnek verileri yükle</button>
+          <button type="button" onclick="openKeyModal()" class="rounded-xl border border-slate-200 px-3.5 py-2.5 text-xs font-bold text-slate-700 transition hover:bg-slate-50"><i class="fa-solid fa-key mr-1.5 text-blue-600"></i>Cevap anahtarı</button>
+          <button type="button" onclick="downloadExport()" class="rounded-xl border border-emerald-200 bg-emerald-50 px-3.5 py-2.5 text-xs font-bold text-emerald-700 transition hover:bg-emerald-100"><i class="fa-solid fa-download mr-1.5"></i>İndir</button>
+          <button type="button" onclick="resetAllData()" class="rounded-xl border border-rose-200 bg-rose-50 px-3.5 py-2.5 text-xs font-bold text-rose-600 transition hover:bg-rose-100"><i class="fa-solid fa-trash-can mr-1.5"></i>Verileri sıfırla</button>
+        </div>
       </div>
       <div class="grid grid-cols-2 gap-3 lg:grid-cols-4 lg:gap-4">
         <div class="rounded-2xl border border-slate-200/80 bg-white p-4 soft-shadow sm:p-5"><div class="flex items-center justify-between"><span class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Katılımcı</span><span class="grid h-9 w-9 place-items-center rounded-xl bg-blue-50 text-blue-600"><i class="fa-solid fa-users"></i></span></div><p id="statTotalStudents" class="mt-3 text-2xl font-extrabold">0</p></div>
@@ -164,11 +167,39 @@
         }
       } catch (error) { console.warn('Kayıtlı sınav verileri okunamadı.', error); }
     }
+
     function saveState() {
       try { localStorage.setItem(STORAGE_KEY, JSON.stringify({ answerKey, submissions })); }
       catch (error) { showToast('Tarayıcı kaydı yapılamadı. Depolama alanınızı kontrol edin.', 'error'); }
     }
-    window.addEventListener('DOMContentLoaded', () => { loadState(); renderBubbleInputs(); updateAnalyticsDashboard(); });
+
+    function seedSampleData() {
+      submissions = structuredClone(defaultSubmissions);
+      answerKey = [...defaultAnswerKey];
+      saveState();
+      renderBubbleInputs();
+      updateAnalyticsDashboard();
+      showToast('Örnek sınav verileri yüklendi.', 'success');
+    }
+
+    function downloadExport() {
+      const payload = JSON.stringify({ answerKey, submissions }, null, 2);
+      const blob = new Blob([payload], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'optianaliz-verileri.json';
+      a.click();
+      URL.revokeObjectURL(url);
+      showToast('Veriler JSON olarak indirildi.', 'success');
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      loadState();
+      renderBubbleInputs();
+      updateAnalyticsDashboard();
+      setUploadMode('manual');
+    });
 
     function switchTab(tab) {
       const student = tab === 'student';
@@ -178,6 +209,7 @@
       document.getElementById('tabAdminBtn').className = `flex-1 rounded-lg px-4 py-2 text-xs font-bold transition sm:flex-none ${!student ? 'bg-blue-600 text-white' : 'text-slate-300 hover:text-white'}`;
       if (!student) updateAnalyticsDashboard();
     }
+
     function setUploadMode(mode) {
       uploadMode = mode;
       const manual = mode === 'manual';
@@ -186,6 +218,7 @@
       document.getElementById('modeManualBtn').className = `rounded-xl px-3 py-2.5 text-xs font-bold transition ${manual ? 'bg-white text-blue-700 shadow-sm' : 'text-slate-500 hover:text-slate-800'}`;
       document.getElementById('modeImgBtn').className = `rounded-xl px-3 py-2.5 text-xs font-bold transition ${!manual ? 'bg-white text-blue-700 shadow-sm' : 'text-slate-500 hover:text-slate-800'}`;
     }
+
     function renderBubbleInputs() {
       const container = document.getElementById('bubbleContainer');
       container.replaceChildren();
@@ -214,6 +247,7 @@
         choices.append(clear); row.append(title, choices); container.append(row);
       });
     }
+
     function handleImageSelect(event) {
       const file = event.target.files && event.target.files[0];
       if (!file) return;
@@ -226,6 +260,7 @@
       document.getElementById('imagePreviewWrap').classList.remove('hidden');
       showToast('Görsel önizlemesi hazır. Bu sürüm OCR yapmaz; cevaplarını elle işaretlemen gerekir.', 'info');
     }
+
     function clearImage(resetInput = true) {
       if (previewUrl) URL.revokeObjectURL(previewUrl);
       previewUrl = null;
@@ -233,6 +268,7 @@
       document.getElementById('imagePreviewWrap').classList.add('hidden');
       if (resetInput) document.getElementById('optikFileInput').value = '';
     }
+
     function calculateResult(answers) {
       let correct = 0, wrong = 0, empty = 0;
       const details = answerKey.map((key, idx) => {
@@ -242,8 +278,10 @@
         return { qNum:idx + 1, given:ans, key, isCorrect, isEmpty };
       });
       const net = Math.max(0, correct - wrong * 0.25);
-      return { correct, wrong, empty, net, score:answerKey.length ? net / answerKey.length * 100 : 0, details };
+      const score = answerKey.length ? (net / answerKey.length) * 100 : 0;
+      return { correct, wrong, empty, net, score, details };
     }
+
     function submitOptik(event) {
       event.preventDefault();
       const name = document.getElementById('studentName').value.trim();
@@ -256,7 +294,9 @@
       saveState();
       displayStudentResult(name, id, calculateResult(answers));
       showToast(oldIndex >= 0 ? 'Öğrenci kaydı güncellendi ve yeniden değerlendirildi.' : 'Optik form başarıyla değerlendirildi.', 'success');
+      updateAnalyticsDashboard();
     }
+
     function displayStudentResult(name, id, result) {
       document.getElementById('emptyResultCard').classList.add('hidden');
       document.getElementById('activeResultCard').classList.remove('hidden');
@@ -278,6 +318,7 @@
         row.append(label, badge); list.append(row);
       });
     }
+
     function updateAnalyticsDashboard() {
       const total = submissions.length;
       document.getElementById('statTotalStudents').textContent = total;
@@ -309,34 +350,88 @@
         const rate = total ? st.correctCount / total * 100 : 0;
         const row = document.createElement('tr'); row.className = 'transition hover:bg-slate-50';
         const vals = [`Soru ${st.qNum}`, st.key, `${st.correctCount} kişi`, `${st.wrongCount} kişi`, `${st.emptyCount} kişi`];
-        vals.forEach((val,idx) => { const td = document.createElement('td'); td.className = `px-5 py-3 ${idx===1?'font-bold text-blue-600':idx===0?'font-bold':''}`; td.textContent = val; row.append(td); });
+        vals.forEach((val, idx) => { const td = document.createElement('td'); td.className = `px-5 py-3 ${idx===1?'font-bold text-blue-600':idx===0?'font-bold':''}`; td.textContent = val; row.append(td); });
         const rateCell = document.createElement('td'); rateCell.className='px-5 py-3';
         const wrap=document.createElement('div');wrap.className='flex items-center gap-2';const track=document.createElement('div');track.className='h-1.5 w-20 overflow-hidden rounded-full bg-slate-100';const fill=document.createElement('div');fill.className='h-full rounded-full bg-blue-600';fill.style.width=`${rate}%`;track.append(fill);const pct=document.createElement('span');pct.className='font-bold';pct.textContent=`${rate.toFixed(1)}%`;wrap.append(track,pct);rateCell.append(wrap);row.append(rateCell);
         const evalCell=document.createElement('td');evalCell.className='px-5 py-3';const badge=document.createElement('span');badge.className=`rounded-full px-2 py-1 text-[9px] font-bold ${rate>=75?'bg-emerald-100 text-emerald-700':rate>=45?'bg-blue-100 text-blue-700':'bg-rose-100 text-rose-700'}`;badge.textContent=rate>=75?'Yüksek başarı':rate>=45?'Orta zorluk':'Zor';evalCell.append(badge);row.append(evalCell);tbody.append(row);
       });
       renderCharts(stats, total, categories);
     }
+
     function renderCharts(stats, total, categories) {
       const empty = document.getElementById('emptyChartMessage'); empty.classList.toggle('hidden', total > 0); empty.classList.toggle('flex', total === 0);
       if (questionChartInstance) questionChartInstance.destroy();
-      questionChartInstance = new Chart(document.getElementById('questionChart'), { type:'bar', data:{ labels:stats.map(s=>`Soru ${s.qNum}`), datasets:[{ label:'Doğru yanıt (%)', data:stats.map(s=>total?s.correctCount/total*100:0), backgroundColor:'#3b82f6', hoverBackgroundColor:'#1d4ed8', borderRadius:7, maxBarThickness:34 }] }, options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{x:{grid:{display:false},ticks:{font:{size:10}}},y:{beginAtZero:true,max:100,grid:{color:'#f1f5f9'},ticks:{callback:v=>`%${v}`,font:{size:10}}}} } });
+      questionChartInstance = new Chart(document.getElementById('questionChart'), {
+        type:'bar',
+        data:{
+          labels:stats.map(s=>`Soru ${s.qNum}`),
+          datasets:[{ label:'Doğru yanıt (%)', data:stats.map(s=> total ? s.correctCount / total * 100 : 0), backgroundColor:'#3b82f6', hoverBackgroundColor:'#1d4ed8', borderRadius:7, maxBarThickness:34 }]
+        },
+        options:{
+          responsive:true, maintainAspectRatio:false,
+          plugins:{ legend:{display:false} },
+          scales:{
+            x:{ grid:{display:false}, ticks:{ font:{ size:10 } } },
+            y:{ beginAtZero:true, max:100, grid:{ color:'#f1f5f9' }, ticks:{ callback:v => `%${v}`, font:{size:10} } }
+          }
+        }
+      });
       if (scoreDistChartInstance) scoreDistChartInstance.destroy();
-      scoreDistChartInstance = new Chart(document.getElementById('scoreDistChart'), { type:'doughnut', data:{labels:['Yüksek · 80–100','Orta · 50–79','Düşük · 0–49'],datasets:[{data:[categories.high,categories.mid,categories.low],backgroundColor:['#10b981','#f59e0b','#f43f5e'],borderWidth:0,hoverOffset:5}]}, options:{responsive:true,maintainAspectRatio:false,cutout:'68%',plugins:{legend:{position:'bottom',labels:{usePointStyle:true,pointStyle:'circle',padding:16,font:{size:10}}}}} });
+      scoreDistChartInstance = new Chart(document.getElementById('scoreDistChart'), {
+        type:'doughnut',
+        data:{ labels:['Yüksek · 80–100','Orta · 50–79','Düşük · 0–49'], datasets:[{ data:[categories.high, categories.mid, categories.low], backgroundColor:['#10b981','#f59e0b','#f43f5e'], borderWidth:0, hoverOffset:5 }] },
+        options:{ responsive:true, maintainAspectRatio:false, cutout:'68%', plugins:{ legend:{ position:'bottom', labels:{ usePointStyle:true, pointStyle:'circle', padding:16, font:{ size:10 } } } } }
+      });
     }
+
     function openKeyModal() {
       const container=document.getElementById('modalKeyInputs');container.replaceChildren();
       answerKey.forEach((key,idx)=>{const row=document.createElement('label');row.className='flex items-center justify-between rounded-xl bg-slate-50 px-3 py-2';const title=document.createElement('span');title.className='text-xs font-bold text-slate-700';title.textContent=`Soru ${idx+1}`;const select=document.createElement('select');select.id=`modal_key_${idx}`;select.className='rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-bold text-blue-700 outline-none focus:ring-2 focus:ring-blue-500/20';options.forEach(opt=>{const option=document.createElement('option');option.value=opt;option.textContent=opt;option.selected=opt===key;select.append(option)});row.append(title,select);container.append(row)});
-      const modal=document.getElementById('keyModal');modal.classList.remove('hidden');modal.classList.add('flex');document.getElementById('keyModalTitle').focus();
+      const modal=document.getElementById('keyModal');modal.classList.remove('hidden');modal.classList.add('flex');
     }
+
     function closeKeyModal(){const modal=document.getElementById('keyModal');modal.classList.add('hidden');modal.classList.remove('flex')}
-    function saveAnswerKey(){answerKey=answerKey.map((_,idx)=>document.getElementById(`modal_key_${idx}`)?.value||answerKey[idx]);submissions=submissions.map(s=>({...s,answers:Array.from({length:answerKey.length},(_,i)=>options.includes(s.answers[i])?s.answers[i]:'')}));saveState();renderBubbleInputs();updateAnalyticsDashboard();closeKeyModal();showToast('Cevap anahtarı güncellendi ve sonuçlar yeniden hesaplandı.','success')}
-    function resetAllData(){if(!confirm('Tüm öğrenci katılımlarını ve cevap anahtarını varsayılan duruma döndürmek istiyor musun?'))return;submissions=[];answerKey=[...defaultAnswerKey];saveState();renderBubbleInputs();updateAnalyticsDashboard();document.getElementById('activeResultCard').classList.add('hidden');document.getElementById('emptyResultCard').classList.remove('hidden');showToast('Katılımlar silindi ve cevap anahtarı sıfırlandı.','info')}
-    function showToast(message,type='info'){
-      const toast=document.getElementById('toast'),icon=document.getElementById('toastIcon');clearTimeout(toastTimer);
-      toast.className='mb-1 flex items-center justify-between gap-4 rounded-2xl border px-4 py-3 text-sm font-semibold';
-      const colors=type==='success'?'border-emerald-200 bg-emerald-50 text-emerald-800':type==='error'?'border-rose-200 bg-rose-50 text-rose-800':'border-blue-200 bg-blue-50 text-blue-800';toast.classList.add(...colors.split(' '));icon.className=`fa-solid ${type==='success'?'fa-circle-check':type==='error'?'fa-circle-exclamation':'fa-circle-info'}`;document.getElementById('toastMessage').textContent=message;toastTimer=setTimeout(hideToast,4500);
+
+    function saveAnswerKey(){
+      answerKey = answerKey.map((_,idx) => document.getElementById(`modal_key_${idx}`)?.value || answerKey[idx]);
+      submissions = submissions.map(s => ({ ...s, answers: Array.from({ length: answerKey.length }, (_, i) => options.includes(s.answers[i]) ? s.answers[i] : '') }));
+      saveState();
+      renderBubbleInputs();
+      updateAnalyticsDashboard();
+      closeKeyModal();
+      showToast('Cevap anahtarı güncellendi ve sonuçlar yeniden hesaplandı.','success');
     }
-    function hideToast(){document.getElementById('toast').classList.add('hidden')}
+
+    function resetAllData(){
+      if(!confirm('Tüm öğrenci katılımlarını ve cevap anahtarını varsayılan duruma döndürmek istiyor musun?')) return;
+      submissions = [];
+      answerKey = [...defaultAnswerKey];
+      saveState();
+      renderBubbleInputs();
+      updateAnalyticsDashboard();
+      document.getElementById('activeResultCard').classList.add('hidden');
+      document.getElementById('emptyResultCard').classList.remove('hidden');
+      showToast('Katılımlar silindi ve cevap anahtarı sıfırlandı.','info');
+    }
+
+    function showToast(message, type='info') {
+      const toast=document.getElementById('toast');
+      clearTimeout(toastTimer);
+      toast.className = 'flex items-center justify-between gap-4 rounded-2xl border px-4 py-3 text-sm font-semibold';
+      const typeMap = {
+        success: 'border-emerald-200 bg-emerald-50 text-emerald-800',
+        error: 'border-rose-200 bg-rose-50 text-rose-800',
+        info: 'border-blue-200 bg-blue-50 text-blue-800',
+      };
+      toast.classList.add(...typeMap[type] ? typeMap[type].split(' ') : typeMap.info.split(' '));
+      const icon = document.getElementById('toastIcon') || document.createElement('i');
+      icon.id = 'toastIcon';
+      icon.className = `fa-solid ${type === 'success' ? 'fa-circle-check' : type === 'error' ? 'fa-circle-exclamation' : 'fa-circle-info'}`;
+      toast.innerHTML = `<div class="flex items-center gap-3"><i id="toastIcon" class="fa-solid ${type === 'success' ? 'fa-circle-check' : type === 'error' ? 'fa-circle-exclamation' : 'fa-circle-info'}"></i><span id="toastMessage">${message}</span></div><button type="button" onclick="hideToast()" aria-label="Bildirimi kapat" class="opacity-70 hover:opacity-100"><i class="fa-solid fa-xmark"></i></button>`;
+      toastTimer = setTimeout(hideToast, 4500);
+    }
+
+    function hideToast(){document.getElementById('toast').classList.add('hidden');}
     document.addEventListener('keydown',event=>{if(event.key==='Escape')closeKeyModal()});
   </script>
 </body>
