@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#101827">
+  <meta name="description" content="Optik sınav cevaplarınızı değerlendirin, sonuçlarınızı görüntüleyin ve sınav istatistiklerini inceleyin.">
+  <title>OptiAnaliz — Optik Sınav Değerlendirme</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+  <style>
+    :root { color-scheme: light; }
+    body { font-family: 'DM Sans', sans-serif; background: #f5f7fb; }
+    .bubble-input:checked + label { background:#2563eb; color:#fff; border-color:#2563eb; box-shadow:0 4px 12px #2563eb35; }
+    .bubble-input:focus-visible + label { outline:3px solid #93c5fd; outline-offset:2px; }
+    .glass { background:rgba(255,255,255,.92); backdrop-filter:blur(14px); }
+    .soft-shadow { box-shadow:0 12px 36px rgba(15,23,42,.06); }
+    .fade-in { animation:fade-in .28s ease-out; }
+    @keyframes fade-in { from { opacity:0; transform:translateY(6px) } to { opacity:1; transform:translateY(0) } }
+    @media (prefers-reduced-motion: reduce) { *,*::before,*::after { animation-duration:.01ms!important; transition-duration:.01ms!important; scroll-behavior:auto!important; } }
+  </style>
+</head>
+<body class="min-h-screen text-slate-800">
+  <header class="sticky top-0 z-40 border-b border-white/10 bg-slate-950 text-white shadow-lg shadow-slate-900/10">
+    <div class="mx-auto flex max-w-7xl flex-col gap-3 px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+      <a href="#" class="flex items-center gap-3" aria-label="OptiAnaliz ana sayfa">
+        <span class="grid h-10 w-10 place-items-center rounded-xl bg-blue-500 text-lg shadow-lg shadow-blue-500/25"><i class="fa-solid fa-file-signature"></i></span>
+        <span><span class="block text-base font-extrabold tracking-tight">OptiAnaliz</span><span class="block text-[11px] text-slate-400">Sınav değerlendirme platformu</span></span>
+      </a>
+      <nav class="flex w-full rounded-xl bg-white/5 p-1 sm:w-auto" aria-label="Ana gezinme">
+        <button id="tabStudentBtn" type="button" onclick="switchTab('student')" class="flex-1 rounded-lg bg-blue-600 px-4 py-2 text-xs font-bold text-white transition sm:flex-none"><i class="fa-solid fa-pen-to-square mr-2"></i>Öğrenci</button>
+        <button id="tabAdminBtn" type="button" onclick="switchTab('admin')" class="flex-1 rounded-lg px-4 py-2 text-xs font-bold text-slate-300 transition hover:text-white sm:flex-none"><i class="fa-solid fa-chart-pie mr-2"></i>Analiz</button>
+      </nav>
+    </div>
+  </header>
+
+  <main class="mx-auto w-full max-w-7xl space-y-6 px-4 py-6 sm:px-6 sm:py-8">
+    <div id="toast" role="status" aria-live="polite" class="hidden items-center justify-between gap-4 rounded-2xl border px-4 py-3 text-sm font-semibold">
+      <div class="flex items-center gap-3"><i id="toastIcon" class="fa-solid fa-circle-info"></i><span id="toastMessage"></span></div>
+      <button type="button" onclick="hideToast()" aria-label="Bildirimi kapat" class="opacity-70 hover:opacity-100"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+
+    <section id="studentSection" class="space-y-6">
+      <div class="relative overflow-hidden rounded-3xl bg-gradient-to-br from-blue-700 via-blue-700 to-indigo-900 px-6 py-8 text-white soft-shadow sm:px-9 sm:py-10">
+        <div class="pointer-events-none absolute -right-10 -top-20 h-72 w-72 rounded-full border-[35px] border-white/5"></div>
+        <div class="pointer-events-none absolute -bottom-36 right-40 h-64 w-64 rounded-full bg-cyan-400/10 blur-2xl"></div>
+        <div class="relative max-w-2xl">
+          <span class="mb-4 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-blue-100"><i class="fa-solid fa-sparkles"></i> Hızlı ve kolay değerlendirme</span>
+          <h1 class="text-2xl font-extrabold tracking-tight sm:text-4xl">Sınav sonucunu hemen öğren.</h1>
+          <p class="mt-3 max-w-xl text-sm leading-6 text-blue-100 sm:text-base">Öğrenci bilgilerini gir, cevaplarını işaretle ve doğru, yanlış, boş sayınla netini anında görüntüle.</p>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 gap-6 lg:grid-cols-12">
+        <div class="rounded-3xl border border-slate-200/80 bg-white p-5 soft-shadow sm:p-7 lg:col-span-7">
+          <div class="mb-6 flex items-start justify-between gap-4">
+            <div><p class="text-xs font-bold uppercase tracking-widest text-blue-600">Cevap kağıdı</p><h2 class="mt-1 text-xl font-extrabold tracking-tight">Optik veri girişi</h2></div>
+            <span class="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-blue-50 text-blue-600"><i class="fa-solid fa-list-check"></i></span>
+          </div>
+          <form id="optikForm" onsubmit="submitOptik(event)" class="space-y-5">
+            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div><label for="studentName" class="mb-1.5 block text-xs font-bold text-slate-600">Ad Soyad</label><input type="text" id="studentName" required maxlength="100" autocomplete="name" placeholder="Örn. Ahmet Yılmaz" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-3 text-sm outline-none transition focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10"></div>
+              <div><label for="studentId" class="mb-1.5 block text-xs font-bold text-slate-600">Öğrenci numarası</label><input type="text" id="studentId" required maxlength="40" autocomplete="off" placeholder="Örn. 2024001" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-3 text-sm outline-none transition focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10"></div>
+            </div>
+            <div>
+              <p class="mb-2 text-xs font-bold text-slate-600">Cevaplarını nasıl gireceksin?</p>
+              <div class="grid grid-cols-2 gap-2 rounded-2xl bg-slate-100 p-1.5">
+                <button type="button" onclick="setUploadMode('manual')" id="modeManualBtn" class="rounded-xl bg-white px-3 py-2.5 text-xs font-bold text-blue-700 shadow-sm"><i class="fa-solid fa-list-check mr-1.5"></i>Elle işaretle</button>
+                <button type="button" onclick="setUploadMode('image')" id="modeImgBtn" class="rounded-xl px-3 py-2.5 text-xs font-bold text-slate-500 transition hover:text-slate-800"><i class="fa-solid fa-image mr-1.5"></i>Görsel seç</button>
+              </div>
+              <div id="imageUploadArea" class="mt-3 hidden rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50 p-5 text-center transition hover:border-blue-300">
+                <input type="file" id="optikFileInput" accept="image/png,image/jpeg,image/webp" class="sr-only" onchange="handleImageSelect(event)">
+                <label for="optikFileInput" class="cursor-pointer"><span class="mx-auto mb-2 grid h-11 w-11 place-items-center rounded-xl bg-blue-50 text-blue-600"><i class="fa-solid fa-cloud-arrow-up"></i></span><span class="block text-sm font-bold text-slate-700">Optik görseli seç</span><span class="mt-1 block text-xs text-slate-400">PNG, JPG veya WebP · Görselden otomatik okuma henüz desteklenmiyor</span></label>
+                <div id="imagePreviewWrap" class="mt-4 hidden"><img id="imagePreview" alt="Seçilen optik form önizlemesi" class="mx-auto max-h-52 max-w-full rounded-xl border border-slate-200 object-contain"><p id="fileSelectText" class="mt-2 truncate text-xs text-slate-500"></p><button type="button" onclick="clearImage()" class="mt-2 text-xs font-bold text-rose-600 hover:text-rose-700">Görseli kaldır</button></div>
+              </div>
+              <div id="manualOpticalArea" class="mt-3 max-h-[390px] space-y-2 overflow-y-auto rounded-2xl border border-slate-200 bg-slate-50 p-3 sm:p-4">
+                <p class="mb-3 text-xs leading-5 text-slate-500">Her soru için bir seçenek işaretle. Yanıtlamadığın soruları boş bırakabilirsin.</p>
+                <div id="bubbleContainer" class="space-y-2"></div>
+              </div>
+            </div>
+            <button type="submit" class="flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 py-3.5 text-sm font-bold text-white shadow-lg shadow-blue-600/20 transition hover:-translate-y-0.5 hover:bg-blue-700"><i class="fa-solid fa-calculator"></i>Sonucumu hesapla</button>
+          </form>
+        </div>
+
+        <aside class="lg:col-span-5">
+          <div id="emptyResultCard" class="flex h-full min-h-[360px] flex-col items-center justify-center rounded-3xl border border-slate-200/80 bg-white p-8 text-center soft-shadow">
+            <span class="grid h-16 w-16 place-items-center rounded-2xl bg-blue-50 text-2xl text-blue-600"><i class="fa-solid fa-clipboard-check"></i></span>
+            <h3 class="mt-5 text-lg font-extrabold">Sonucun burada</h3><p class="mt-2 max-w-xs text-sm leading-6 text-slate-500">Cevaplarını gönderdiğinde sınav puanın ve soru bazlı değerlendirme burada görüntülenecek.</p>
+            <div class="mt-6 flex items-center gap-2 text-xs font-semibold text-slate-400"><i class="fa-solid fa-shield-halved text-emerald-500"></i> Hesaplama tarayıcında yapılır</div>
+          </div>
+          <div id="activeResultCard" class="hidden space-y-5 rounded-3xl border border-slate-200/80 bg-white p-5 soft-shadow sm:p-6" aria-live="polite">
+            <div class="flex items-start justify-between border-b border-slate-100 pb-4"><div><p class="text-[11px] font-bold uppercase tracking-widest text-slate-400">Öğrenci sonucu</p><h3 id="resStudentName" class="mt-1 break-words text-lg font-extrabold"></h3><p id="resStudentId" class="mt-0.5 text-xs text-slate-500"></p></div><div class="text-right"><span class="block text-[10px] font-bold uppercase tracking-wider text-slate-400">Puan</span><span id="resScore" class="text-3xl font-extrabold tracking-tight text-blue-600"></span></div></div>
+            <div class="grid grid-cols-4 gap-2 text-center">
+              <div class="rounded-xl border border-emerald-100 bg-emerald-50 p-2"><span class="block text-[9px] font-bold uppercase text-emerald-600">Doğru</span><span id="resCorrect" class="text-lg font-extrabold text-emerald-700"></span></div>
+              <div class="rounded-xl border border-rose-100 bg-rose-50 p-2"><span class="block text-[9px] font-bold uppercase text-rose-600">Yanlış</span><span id="resWrong" class="text-lg font-extrabold text-rose-700"></span></div>
+              <div class="rounded-xl border border-slate-200 bg-slate-50 p-2"><span class="block text-[9px] font-bold uppercase text-slate-500">Boş</span><span id="resEmpty" class="text-lg font-extrabold text-slate-700"></span></div>
+              <div class="rounded-xl border border-indigo-100 bg-indigo-50 p-2"><span class="block text-[9px] font-bold uppercase text-indigo-600">Net</span><span id="resNet" class="text-lg font-extrabold text-indigo-700"></span></div>
+            </div>
+            <div><h4 class="mb-2 text-xs font-bold uppercase tracking-wider text-slate-500">Soru soru değerlendirme</h4><div id="studentQuestionsBreakdown" class="max-h-64 space-y-1.5 overflow-y-auto pr-1"></div></div>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <section id="adminSection" class="hidden space-y-6">
+      <div class="flex flex-col gap-4 rounded-3xl border border-slate-200/80 bg-white p-5 soft-shadow sm:flex-row sm:items-center sm:justify-between sm:p-6">
+        <div><p class="text-xs font-bold uppercase tracking-widest text-blue-600">Genel bakış</p><h2 class="mt-1 text-xl font-extrabold tracking-tight sm:text-2xl">Sınav analizi</h2><p class="mt-1 text-sm text-slate-500">Katılımı, soru başarısını ve sınıf sonuçlarını incele.</p></div>
+        <div class="flex flex-wrap gap-2"><button type="button" onclick="openKeyModal()" class="rounded-xl border border-slate-200 px-3.5 py-2.5 text-xs font-bold text-slate-700 transition hover:bg-slate-50"><i class="fa-solid fa-key mr-1.5 text-blue-600"></i>Cevap anahtarı</button><button type="button" onclick="resetAllData()" class="rounded-xl border border-rose-200 bg-rose-50 px-3.5 py-2.5 text-xs font-bold text-rose-600 transition hover:bg-rose-100"><i class="fa-solid fa-trash-can mr-1.5"></i>Verileri sıfırla</button></div>
+      </div>
+      <div class="grid grid-cols-2 gap-3 lg:grid-cols-4 lg:gap-4">
+        <div class="rounded-2xl border border-slate-200/80 bg-white p-4 soft-shadow sm:p-5"><div class="flex items-center justify-between"><span class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Katılımcı</span><span class="grid h-9 w-9 place-items-center rounded-xl bg-blue-50 text-blue-600"><i class="fa-solid fa-users"></i></span></div><p id="statTotalStudents" class="mt-3 text-2xl font-extrabold">0</p></div>
+        <div class="rounded-2xl border border-slate-200/80 bg-white p-4 soft-shadow sm:p-5"><div class="flex items-center justify-between"><span class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Ortalama net</span><span class="grid h-9 w-9 place-items-center rounded-xl bg-indigo-50 text-indigo-600"><i class="fa-solid fa-calculator"></i></span></div><p id="statAvgNet" class="mt-3 text-2xl font-extrabold">0.00</p></div>
+        <div class="rounded-2xl border border-slate-200/80 bg-white p-4 soft-shadow sm:p-5"><div class="flex items-center justify-between"><span class="text-[10px] font-bold uppercase tracking-wider text-slate-400">En zor soru</span><span class="grid h-9 w-9 place-items-center rounded-xl bg-amber-50 text-amber-600"><i class="fa-solid fa-arrow-trend-down"></i></span></div><p id="statHardestQuestion" class="mt-3 truncate text-lg font-extrabold text-amber-600">—</p></div>
+        <div class="rounded-2xl border border-slate-200/80 bg-white p-4 soft-shadow sm:p-5"><div class="flex items-center justify-between"><span class="text-[10px] font-bold uppercase tracking-wider text-slate-400">En kolay soru</span><span class="grid h-9 w-9 place-items-center rounded-xl bg-emerald-50 text-emerald-600"><i class="fa-solid fa-bullseye"></i></span></div><p id="statEasiestQuestion" class="mt-3 truncate text-lg font-extrabold text-emerald-600">—</p></div>
+      </div>
+      <div class="grid grid-cols-1 gap-4 lg:grid-cols-12">
+        <div class="rounded-3xl border border-slate-200/80 bg-white p-5 soft-shadow sm:p-6 lg:col-span-8"><div class="mb-4"><h3 class="font-extrabold">Soru bazlı doğru oranı</h3><p class="mt-1 text-xs text-slate-500">Her soruyu doğru yanıtlayan öğrencilerin yüzdesi.</p></div><div class="relative h-64"><canvas id="questionChart" aria-label="Soru bazında doğru cevap yüzdeleri" role="img"></canvas><p id="emptyChartMessage" class="absolute inset-0 hidden items-center justify-center text-sm text-slate-400">Henüz analiz edilecek katılım yok.</p></div></div>
+        <div class="rounded-3xl border border-slate-200/80 bg-white p-5 soft-shadow sm:p-6 lg:col-span-4"><div class="mb-4"><h3 class="font-extrabold">Puan dağılımı</h3><p class="mt-1 text-xs text-slate-500">Katılımcıların puan aralıkları.</p></div><div class="relative h-64"><canvas id="scoreDistChart" aria-label="Puan aralığına göre öğrenci dağılımı" role="img"></canvas></div></div>
+      </div>
+      <div class="overflow-hidden rounded-3xl border border-slate-200/80 bg-white soft-shadow"><div class="border-b border-slate-100 px-5 py-4"><h3 class="font-extrabold">Soru bazlı detaylar</h3><p class="mt-1 text-xs text-slate-500">Doğru, yanlış ve boş cevapların özeti.</p></div><div class="overflow-x-auto"><table class="w-full min-w-[760px] text-left"><thead><tr class="bg-slate-50 text-[10px] font-bold uppercase tracking-wider text-slate-400"><th class="px-5 py-3">Soru</th><th class="px-5 py-3">Anahtar</th><th class="px-5 py-3">Doğru</th><th class="px-5 py-3">Yanlış</th><th class="px-5 py-3">Boş</th><th class="px-5 py-3">Başarı oranı</th><th class="px-5 py-3">Değerlendirme</th></tr></thead><tbody id="questionAnalysisTable" class="divide-y divide-slate-100 text-xs"></tbody></table></div></div>
+      <div class="overflow-hidden rounded-3xl border border-slate-200/80 bg-white soft-shadow"><div class="border-b border-slate-100 px-5 py-4"><h3 class="font-extrabold">Katılımcı sonuçları</h3><p class="mt-1 text-xs text-slate-500">Kayıtlı sınav sonuçları.</p></div><div class="overflow-x-auto"><table class="w-full min-w-[680px] text-left"><thead><tr class="bg-slate-50 text-[10px] font-bold uppercase tracking-wider text-slate-400"><th class="px-5 py-3">Öğrenci no</th><th class="px-5 py-3">Ad soyad</th><th class="px-5 py-3">Doğru</th><th class="px-5 py-3">Yanlış</th><th class="px-5 py-3">Boş</th><th class="px-5 py-3">Net</th><th class="px-5 py-3">Puan</th></tr></thead><tbody id="studentListTable" class="divide-y divide-slate-100 text-xs"></tbody></table></div></div>
+      <p class="text-center text-[11px] leading-5 text-slate-400">Bu demo verileri yalnızca bu tarayıcıda saklar. Gerçek OCR, kullanıcı doğrulaması ve sunucu tabanlı ortak veri için bir arka uç gerekir.</p>
+    </section>
+  </main>
+
+  <div id="keyModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-950/60 p-4 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="keyModalTitle" onclick="if(event.target===this)closeKeyModal()">
+    <div class="w-full max-w-lg space-y-4 rounded-3xl bg-white p-5 shadow-2xl sm:p-6">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3"><div><p class="text-[10px] font-bold uppercase tracking-widest text-blue-600">Sınav ayarları</p><h3 id="keyModalTitle" class="mt-1 text-lg font-extrabold">Cevap anahtarı</h3></div><button type="button" onclick="closeKeyModal()" aria-label="Pencereyi kapat" class="grid h-9 w-9 place-items-center rounded-xl text-slate-400 hover:bg-slate-100 hover:text-slate-700"><i class="fa-solid fa-xmark"></i></button></div>
+      <p class="text-xs leading-5 text-slate-500">Doğru seçenekleri güncelle. Sonuçlar ve analizler yeni anahtara göre yeniden hesaplanır.</p>
+      <div id="modalKeyInputs" class="max-h-64 space-y-2 overflow-y-auto pr-1"></div>
+      <div class="flex justify-end gap-2 border-t border-slate-100 pt-4"><button type="button" onclick="closeKeyModal()" class="rounded-xl px-4 py-2.5 text-xs font-bold text-slate-500 hover:bg-slate-100">Vazgeç</button><button type="button" onclick="saveAnswerKey()" class="rounded-xl bg-blue-600 px-4 py-2.5 text-xs font-bold text-white hover:bg-blue-700">Kaydet ve güncelle</button></div>
+    </div>
+  </div>
+
+  <script>
+    const STORAGE_KEY = 'optianaliz-v1';
+    const options = ['A', 'B', 'C', 'D', 'E'];
+    const defaultAnswerKey = ['A','B','C','D','E','A','B','C','D','E','A','B'];
+    const defaultSubmissions = [
+      { id:'2024001', name:'Mehmet Demir', answers:['A','B','C','D','E','A','B','C','D','E','A','B'] },
+      { id:'2024002', name:'Zeynep Kaya', answers:['A','B','C','A','E','A','B','D','D','E','B','B'] },
+      { id:'2024003', name:'Can Yılmaz', answers:['A','C','C','D','E','B','B','C','D','A','A','C'] },
+      { id:'2024004', name:'Elif Şahin', answers:['A','B','C','D','E','A','B','C','E','E','A','B'] },
+      { id:'2024005', name:'Burak Çelik', answers:['B','B','C','D','A','A','C','C','D','E','',''] }
+    ];
+    let answerKey = [...defaultAnswerKey];
+    let submissions = structuredClone(defaultSubmissions);
+    let uploadMode = 'manual';
+    let questionChartInstance = null;
+    let scoreDistChartInstance = null;
+    let toastTimer;
+    let previewUrl = null;
+
+    function loadState() {
+      try {
+        const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
+        if (saved && Array.isArray(saved.answerKey) && Array.isArray(saved.submissions)) {
+          if (saved.answerKey.length && saved.answerKey.every(v => options.includes(v))) answerKey = saved.answerKey;
+          submissions = saved.submissions.filter(s => s && typeof s.id === 'string' && typeof s.name === 'string' && Array.isArray(s.answers)).map(s => ({ id:s.id, name:s.name, answers:Array.from({length:answerKey.length}, (_,i) => options.includes(s.answers[i]) ? s.answers[i] : '') }));
+        }
+      } catch (error) { console.warn('Kayıtlı sınav verileri okunamadı.', error); }
+    }
+    function saveState() {
+      try { localStorage.setItem(STORAGE_KEY, JSON.stringify({ answerKey, submissions })); }
+      catch (error) { showToast('Tarayıcı kaydı yapılamadı. Depolama alanınızı kontrol edin.', 'error'); }
+    }
+    window.addEventListener('DOMContentLoaded', () => { loadState(); renderBubbleInputs(); updateAnalyticsDashboard(); });
+
+    function switchTab(tab) {
+      const student = tab === 'student';
+      document.getElementById('studentSection').classList.toggle('hidden', !student);
+      document.getElementById('adminSection').classList.toggle('hidden', student);
+      document.getElementById('tabStudentBtn').className = `flex-1 rounded-lg px-4 py-2 text-xs font-bold transition sm:flex-none ${student ? 'bg-blue-600 text-white' : 'text-slate-300 hover:text-white'}`;
+      document.getElementById('tabAdminBtn').className = `flex-1 rounded-lg px-4 py-2 text-xs font-bold transition sm:flex-none ${!student ? 'bg-blue-600 text-white' : 'text-slate-300 hover:text-white'}`;
+      if (!student) updateAnalyticsDashboard();
+    }
+    function setUploadMode(mode) {
+      uploadMode = mode;
+      const manual = mode === 'manual';
+      document.getElementById('manualOpticalArea').classList.toggle('hidden', !manual);
+      document.getElementById('imageUploadArea').classList.toggle('hidden', manual);
+      document.getElementById('modeManualBtn').className = `rounded-xl px-3 py-2.5 text-xs font-bold transition ${manual ? 'bg-white text-blue-700 shadow-sm' : 'text-slate-500 hover:text-slate-800'}`;
+      document.getElementById('modeImgBtn').className = `rounded-xl px-3 py-2.5 text-xs font-bold transition ${!manual ? 'bg-white text-blue-700 shadow-sm' : 'text-slate-500 hover:text-slate-800'}`;
+    }
+    function renderBubbleInputs() {
+      const container = document.getElementById('bubbleContainer');
+      container.replaceChildren();
+      answerKey.forEach((_, idx) => {
+        const row = document.createElement('div');
+        row.className = 'flex items-center justify-between gap-2 rounded-xl border border-slate-200 bg-white px-2.5 py-2';
+        const title = document.createElement('span');
+        title.className = 'w-14 shrink-0 text-[11px] font-extrabold text-slate-600';
+        title.textContent = `Soru ${idx + 1}`;
+        const choices = document.createElement('div');
+        choices.className = 'flex items-center gap-1.5 sm:gap-2';
+        options.forEach(opt => {
+          const input = document.createElement('input');
+          input.type = 'radio'; input.name = `q_${idx}`; input.value = opt; input.id = `q_${idx}_${opt}`;
+          input.className = 'bubble-input sr-only';
+          const label = document.createElement('label');
+          label.htmlFor = input.id; label.textContent = opt;
+          label.className = 'grid h-7 w-7 cursor-pointer place-items-center rounded-full border border-slate-200 text-[10px] font-bold text-slate-600 transition hover:border-blue-300 sm:h-8 sm:w-8';
+          choices.append(input, label);
+        });
+        const clear = document.createElement('button');
+        clear.type = 'button'; clear.className = 'ml-1 rounded-md p-1 text-slate-400 hover:bg-rose-50 hover:text-rose-500';
+        clear.setAttribute('aria-label', `Soru ${idx + 1} yanıtını temizle`);
+        clear.innerHTML = '<i class="fa-solid fa-eraser"></i>';
+        clear.addEventListener('click', () => document.querySelectorAll(`input[name="q_${idx}"]`).forEach(r => { r.checked = false; }));
+        choices.append(clear); row.append(title, choices); container.append(row);
+      });
+    }
+    function handleImageSelect(event) {
+      const file = event.target.files && event.target.files[0];
+      if (!file) return;
+      if (!['image/png','image/jpeg','image/webp'].includes(file.type)) { showToast('Lütfen PNG, JPG veya WebP biçiminde bir görsel seçin.', 'error'); event.target.value = ''; return; }
+      if (file.size > 10 * 1024 * 1024) { showToast('Görsel boyutu en fazla 10 MB olabilir.', 'error'); event.target.value = ''; return; }
+      clearImage(false);
+      previewUrl = URL.createObjectURL(file);
+      document.getElementById('imagePreview').src = previewUrl;
+      document.getElementById('fileSelectText').textContent = file.name;
+      document.getElementById('imagePreviewWrap').classList.remove('hidden');
+      showToast('Görsel önizlemesi hazır. Bu sürüm OCR yapmaz; cevaplarını elle işaretlemen gerekir.', 'info');
+    }
+    function clearImage(resetInput = true) {
+      if (previewUrl) URL.revokeObjectURL(previewUrl);
+      previewUrl = null;
+      document.getElementById('imagePreview').removeAttribute('src');
+      document.getElementById('imagePreviewWrap').classList.add('hidden');
+      if (resetInput) document.getElementById('optikFileInput').value = '';
+    }
+    function calculateResult(answers) {
+      let correct = 0, wrong = 0, empty = 0;
+      const details = answerKey.map((key, idx) => {
+        const ans = options.includes(answers[idx]) ? answers[idx] : '';
+        const isEmpty = !ans, isCorrect = ans === key;
+        if (isEmpty) empty++; else if (isCorrect) correct++; else wrong++;
+        return { qNum:idx + 1, given:ans, key, isCorrect, isEmpty };
+      });
+      const net = Math.max(0, correct - wrong * 0.25);
+      return { correct, wrong, empty, net, score:answerKey.length ? net / answerKey.length * 100 : 0, details };
+    }
+    function submitOptik(event) {
+      event.preventDefault();
+      const name = document.getElementById('studentName').value.trim();
+      const id = document.getElementById('studentId').value.trim();
+      if (!name || !id) { showToast('Lütfen ad soyad ve öğrenci numarası alanlarını doldur.', 'error'); return; }
+      const answers = answerKey.map((_, idx) => document.querySelector(`input[name="q_${idx}"]:checked`)?.value || '');
+      const record = { id, name, answers };
+      const oldIndex = submissions.findIndex(s => s.id === id);
+      if (oldIndex >= 0) submissions[oldIndex] = record; else submissions.push(record);
+      saveState();
+      displayStudentResult(name, id, calculateResult(answers));
+      showToast(oldIndex >= 0 ? 'Öğrenci kaydı güncellendi ve yeniden değerlendirildi.' : 'Optik form başarıyla değerlendirildi.', 'success');
+    }
+    function displayStudentResult(name, id, result) {
+      document.getElementById('emptyResultCard').classList.add('hidden');
+      document.getElementById('activeResultCard').classList.remove('hidden');
+      document.getElementById('resStudentName').textContent = name;
+      document.getElementById('resStudentId').textContent = `No: ${id}`;
+      document.getElementById('resScore').textContent = result.score.toFixed(1);
+      document.getElementById('resCorrect').textContent = result.correct;
+      document.getElementById('resWrong').textContent = result.wrong;
+      document.getElementById('resEmpty').textContent = result.empty;
+      document.getElementById('resNet').textContent = result.net.toFixed(2);
+      const list = document.getElementById('studentQuestionsBreakdown'); list.replaceChildren();
+      result.details.forEach(item => {
+        const row = document.createElement('div');
+        row.className = 'flex items-center justify-between gap-2 rounded-lg border border-slate-100 bg-slate-50 p-2 text-xs';
+        const label = document.createElement('span'); label.className = 'font-medium text-slate-700';
+        label.textContent = `Soru ${item.qNum} · Anahtar: ${item.key}`;
+        const badge = document.createElement('span'); badge.className = `shrink-0 rounded px-2 py-1 text-[9px] font-extrabold ${item.isEmpty ? 'bg-slate-200 text-slate-600' : item.isCorrect ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'}`;
+        badge.textContent = item.isEmpty ? 'BOŞ' : item.isCorrect ? `DOĞRU (${item.given})` : `YANLIŞ (${item.given})`;
+        row.append(label, badge); list.append(row);
+      });
+    }
+    function updateAnalyticsDashboard() {
+      const total = submissions.length;
+      document.getElementById('statTotalStudents').textContent = total;
+      const tbody = document.getElementById('questionAnalysisTable'); tbody.replaceChildren();
+      const studentBody = document.getElementById('studentListTable'); studentBody.replaceChildren();
+      const stats = answerKey.map((key, idx) => ({ qNum:idx + 1, key, correctCount:0, wrongCount:0, emptyCount:0 }));
+      let netSum = 0; const categories = { high:0, mid:0, low:0 };
+      submissions.forEach(sub => {
+        const result = calculateResult(sub.answers); netSum += result.net;
+        if (result.score >= 80) categories.high++; else if (result.score >= 50) categories.mid++; else categories.low++;
+        result.details.forEach((detail, idx) => { if (detail.isEmpty) stats[idx].emptyCount++; else if (detail.isCorrect) stats[idx].correctCount++; else stats[idx].wrongCount++; });
+        const row = document.createElement('tr'); row.className = 'transition hover:bg-slate-50';
+        [sub.id, sub.name, result.correct, result.wrong, result.empty, result.net.toFixed(2), result.score.toFixed(1)].forEach((value, idx) => {
+          const cell = document.createElement('td'); cell.className = `px-5 py-3 ${idx === 0 ? 'font-mono text-slate-500' : idx === 1 || idx === 6 ? 'font-bold text-slate-800' : 'font-semibold text-slate-600'}`;
+          cell.textContent = value; row.append(cell);
+        }); studentBody.append(row);
+      });
+      document.getElementById('statAvgNet').textContent = total ? (netSum / total).toFixed(2) : '0.00';
+      if (total) {
+        const rates = stats.map(s => s.correctCount / total);
+        const min = Math.min(...rates), max = Math.max(...rates);
+        const hard = stats.find((_,i) => rates[i] === min), easy = stats.find((_,i) => rates[i] === max);
+        document.getElementById('statHardestQuestion').textContent = `Soru ${hard.qNum} · %${(min*100).toFixed(0)}`;
+        document.getElementById('statEasiestQuestion').textContent = `Soru ${easy.qNum} · %${(max*100).toFixed(0)}`;
+      } else {
+        document.getElementById('statHardestQuestion').textContent = '—'; document.getElementById('statEasiestQuestion').textContent = '—';
+      }
+      stats.forEach(st => {
+        const rate = total ? st.correctCount / total * 100 : 0;
+        const row = document.createElement('tr'); row.className = 'transition hover:bg-slate-50';
+        const vals = [`Soru ${st.qNum}`, st.key, `${st.correctCount} kişi`, `${st.wrongCount} kişi`, `${st.emptyCount} kişi`];
+        vals.forEach((val,idx) => { const td = document.createElement('td'); td.className = `px-5 py-3 ${idx===1?'font-bold text-blue-600':idx===0?'font-bold':''}`; td.textContent = val; row.append(td); });
+        const rateCell = document.createElement('td'); rateCell.className='px-5 py-3';
+        const wrap=document.createElement('div');wrap.className='flex items-center gap-2';const track=document.createElement('div');track.className='h-1.5 w-20 overflow-hidden rounded-full bg-slate-100';const fill=document.createElement('div');fill.className='h-full rounded-full bg-blue-600';fill.style.width=`${rate}%`;track.append(fill);const pct=document.createElement('span');pct.className='font-bold';pct.textContent=`${rate.toFixed(1)}%`;wrap.append(track,pct);rateCell.append(wrap);row.append(rateCell);
+        const evalCell=document.createElement('td');evalCell.className='px-5 py-3';const badge=document.createElement('span');badge.className=`rounded-full px-2 py-1 text-[9px] font-bold ${rate>=75?'bg-emerald-100 text-emerald-700':rate>=45?'bg-blue-100 text-blue-700':'bg-rose-100 text-rose-700'}`;badge.textContent=rate>=75?'Yüksek başarı':rate>=45?'Orta zorluk':'Zor';evalCell.append(badge);row.append(evalCell);tbody.append(row);
+      });
+      renderCharts(stats, total, categories);
+    }
+    function renderCharts(stats, total, categories) {
+      const empty = document.getElementById('emptyChartMessage'); empty.classList.toggle('hidden', total > 0); empty.classList.toggle('flex', total === 0);
+      if (questionChartInstance) questionChartInstance.destroy();
+      questionChartInstance = new Chart(document.getElementById('questionChart'), { type:'bar', data:{ labels:stats.map(s=>`Soru ${s.qNum}`), datasets:[{ label:'Doğru yanıt (%)', data:stats.map(s=>total?s.correctCount/total*100:0), backgroundColor:'#3b82f6', hoverBackgroundColor:'#1d4ed8', borderRadius:7, maxBarThickness:34 }] }, options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{x:{grid:{display:false},ticks:{font:{size:10}}},y:{beginAtZero:true,max:100,grid:{color:'#f1f5f9'},ticks:{callback:v=>`%${v}`,font:{size:10}}}} } });
+      if (scoreDistChartInstance) scoreDistChartInstance.destroy();
+      scoreDistChartInstance = new Chart(document.getElementById('scoreDistChart'), { type:'doughnut', data:{labels:['Yüksek · 80–100','Orta · 50–79','Düşük · 0–49'],datasets:[{data:[categories.high,categories.mid,categories.low],backgroundColor:['#10b981','#f59e0b','#f43f5e'],borderWidth:0,hoverOffset:5}]}, options:{responsive:true,maintainAspectRatio:false,cutout:'68%',plugins:{legend:{position:'bottom',labels:{usePointStyle:true,pointStyle:'circle',padding:16,font:{size:10}}}}} });
+    }
+    function openKeyModal() {
+      const container=document.getElementById('modalKeyInputs');container.replaceChildren();
+      answerKey.forEach((key,idx)=>{const row=document.createElement('label');row.className='flex items-center justify-between rounded-xl bg-slate-50 px-3 py-2';const title=document.createElement('span');title.className='text-xs font-bold text-slate-700';title.textContent=`Soru ${idx+1}`;const select=document.createElement('select');select.id=`modal_key_${idx}`;select.className='rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-bold text-blue-700 outline-none focus:ring-2 focus:ring-blue-500/20';options.forEach(opt=>{const option=document.createElement('option');option.value=opt;option.textContent=opt;option.selected=opt===key;select.append(option)});row.append(title,select);container.append(row)});
+      const modal=document.getElementById('keyModal');modal.classList.remove('hidden');modal.classList.add('flex');document.getElementById('keyModalTitle').focus();
+    }
+    function closeKeyModal(){const modal=document.getElementById('keyModal');modal.classList.add('hidden');modal.classList.remove('flex')}
+    function saveAnswerKey(){answerKey=answerKey.map((_,idx)=>document.getElementById(`modal_key_${idx}`)?.value||answerKey[idx]);submissions=submissions.map(s=>({...s,answers:Array.from({length:answerKey.length},(_,i)=>options.includes(s.answers[i])?s.answers[i]:'')}));saveState();renderBubbleInputs();updateAnalyticsDashboard();closeKeyModal();showToast('Cevap anahtarı güncellendi ve sonuçlar yeniden hesaplandı.','success')}
+    function resetAllData(){if(!confirm('Tüm öğrenci katılımlarını ve cevap anahtarını varsayılan duruma döndürmek istiyor musun?'))return;submissions=[];answerKey=[...defaultAnswerKey];saveState();renderBubbleInputs();updateAnalyticsDashboard();document.getElementById('activeResultCard').classList.add('hidden');document.getElementById('emptyResultCard').classList.remove('hidden');showToast('Katılımlar silindi ve cevap anahtarı sıfırlandı.','info')}
+    function showToast(message,type='info'){
+      const toast=document.getElementById('toast'),icon=document.getElementById('toastIcon');clearTimeout(toastTimer);
+      toast.className='mb-1 flex items-center justify-between gap-4 rounded-2xl border px-4 py-3 text-sm font-semibold';
+      const colors=type==='success'?'border-emerald-200 bg-emerald-50 text-emerald-800':type==='error'?'border-rose-200 bg-rose-50 text-rose-800':'border-blue-200 bg-blue-50 text-blue-800';toast.classList.add(...colors.split(' '));icon.className=`fa-solid ${type==='success'?'fa-circle-check':type==='error'?'fa-circle-exclamation':'fa-circle-info'}`;document.getElementById('toastMessage').textContent=message;toastTimer=setTimeout(hideToast,4500);
+    }
+    function hideToast(){document.getElementById('toast').classList.add('hidden')}
+    document.addEventListener('keydown',event=>{if(event.key==='Escape')closeKeyModal()});
+  </script>
+</body>
+</html>
